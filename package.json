@@ -1,0 +1,28 @@
+{
+  "name": "belzy-fcc-choropleth-map",
+  "version": "1.0.0",
+  "description": "Data Visualization Projects - Visualize Data with a Choropleth Map\r <br>\r <strong>Staging:</strong> https://belzy-fcc-choropleth-map-st.herokuapp.com/\r <br>\r <strong>Production:</strong> https://belzy-fcc-choropleth-map.herokuapp.com/",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/belzy/belzy-fcc-choropleth-map.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/belzy/belzy-fcc-choropleth-map/issues"
+  },
+  "homepage": "https://github.com/belzy/belzy-fcc-choropleth-map#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.4"
+  }
+}
