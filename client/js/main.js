@@ -168,7 +168,6 @@
                 .attr('data-fips', (d, i) => d['properties']['fips'])
                 .attr('data-education', (d, i) => d['properties']['bachelorsOrHigher'])
                 .on('mouseenter', (d, i) => {
-                    console.log('test')
                     const properties = d['properties'];
                     const tooltipData = `${properties['area_name']}, ${properties['state']}: ${properties['bachelorsOrHigher']}%`;
 
