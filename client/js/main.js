@@ -52,10 +52,6 @@
 
         const countyEduData = dataArr[0];
         const topology = dataArr[1];
-        console.log(topology)
-
-        const bbox = topology['bbox'];
-        const transform = topology['transform'];
         
         const nationGeoJson = topojson.feature(topology, topology['objects']['nation']);
         const stateGeoJson = topojson.feature(topology, topology['objects']['states']);
@@ -75,33 +71,81 @@
         });
 
         // Get min/max percentages.
-        // const percentages = countyEduData.map(({bachelorsOrHigher}) => bachelorsOrHigher);
         const minPercent = d3.min(countyEduData, ({bachelorsOrHigher}) => bachelorsOrHigher);
         const maxPercent = d3.max(countyEduData, ({bachelorsOrHigher}) => bachelorsOrHigher);
-        console.log(minPercent, maxPercent);
 
         const w = 1200;
         const h = 740;
+        const translateX = 125;
+        const translateY = 100;
 
         // Color Scale
-        colorsArr = [/*'#F7FBFF', '#DEEBF7', '#C6DBEF', */'#9ECAE1', '#6BAED6', '#4292C6', '#2171B5', '#2171B5', '#08519C', '#08306B'];
+        colorsArr = [/*'#F7FBFF', '#DEEBF7',*/'#C6DBEF', '#9ECAE1', '#6BAED6', '#4292C6', '#2171B5', '#08519C', '#08306B'];
         const scaleColor = d3.scaleQuantize();
         scaleColor.domain([minPercent, maxPercent]).range(colorsArr);
 
-        // Define map projection
-        // const projection = d3.geoAlbersUsa()
-            // .translate([transform['translate'][0], transform['translate'][1]])//.scale([transform['scale'][0], transform['scale'][1]]);
+         // Legend
+         const legendWidth = 300;
+         const legendHeight = 100 / colorsArr.length;
+ 
+         const legendThreshhold = d3.scaleThreshold()
+             .domain(((min, max, count) => {
+ 
+                 const arr = [];
+                 const step = (max-min) / count;
+                 const base = min;
+ 
+                 for (let i = 1; i < count; i++) {
+                     arr.push(base + i * step);
+                 }
+ 
+                 return arr;
+ 
+             })(minPercent, maxPercent, colorsArr.length))
+             .range(colorsArr);
+ 
+         const legendScaleX = d3.scaleLinear()
+             .domain([minPercent, maxPercent])
+             .range([0, legendWidth])
+ 
+         const xLegendAxis = d3.axisBottom(legendScaleX)
+             .tickSize(10, 0)
+             .tickValues(legendThreshhold.domain())
+             .tickFormat(d => `${d.toFixed(0)}%`);
 
         // Define default path generator
         const path = d3.geoPath()
-            // .projection(projection);
 
         const svg = d3.select('#svg-choropleth-map')
             .attr('width', w)
             .attr('height', h)
+
+        // Render Legend
+        const legend = svg.append('g')
+            .attr('id', 'legend')
+            .attr('transform', `translate(${w - legendWidth - 260}, ${60})`)
+
+        legend.append('g')
+            .selectAll('rect')
+            .data(legendThreshhold.range().map(color => {
+                const d = legendThreshhold.invertExtent(color);
+                if (d[0] == null) d[0] = legendScaleX.domain()[0];
+                if (d[1] == null) d[1] = legendScaleX.domain()[1];
+                return d;
+            }))
+            .enter().append('rect')
+            .style('fill', (d, i) => legendThreshhold(d[0]))
+            .attr('x', d => legendScaleX(d[0]))
+            .attr('y', 0)
+            .attr('width', d => legendScaleX(d[1]) - legendScaleX(d[0]))
+            .attr('height', legendHeight)
+
+        legend.append('g')
+            .attr('transform', `translate(0, ${legendHeight})`)
+            .call(xLegendAxis);
         
         const g = svg.append('g')
-            .attr('transform', `translate(125, 100)`)
+            .attr('transform', `translate(${translateX}, ${translateY})`)
             
 
             // svg.selectAll('path')
@@ -124,11 +168,8 @@
                 .attr('data-fips', (d, i) => d['properties']['fips'])
                 .attr('data-education', (d, i) => d['properties']['bachelorsOrHigher'])
                 .on('mouseenter', (d, i) => {
-
                     const properties = d['properties'];
                     const tooltipData = `${properties['area_name']}, ${properties['state']}: ${properties['bachelorsOrHigher']}%`;
-
-                    // console.log(`${properties['area_name']}, ${properties['state']}`)
 
                     // rect.top, rect.right, rect.bottom, rect.left
                     const cellRect = document.querySelector(`[data-area-number="${i}"]`).getBoundingClientRect();
@@ -141,7 +182,6 @@
                         .style('top', `${cellRect.top + ((cellRect.bottom - cellRect.top) / 2) + topOffset}px`)
                         .style('left', `${cellRect.right + leftOffset}px`)
                         .style('opacity', '0.7')
-                        // .attr('data-year', dataset[i]['year'])
 
                     d3.select('#tooltip-data')
                         .text(tooltipData)
